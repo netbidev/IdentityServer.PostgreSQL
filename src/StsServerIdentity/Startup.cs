@@ -1,29 +1,25 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
+
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using IdentityServer4.Services;
-using System.Security.Cryptography.X509Certificates;
-using System.IO;
-using Microsoft.AspNetCore.Identity;
-using System.Globalization;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
-using System.Reflection;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using StsServerIdentity.Services.Certificate;
-using StsServerIdentity.Models;
+using Microsoft.IdentityModel.Tokens;
+
+using IdentityServer4.Services;
+
 using StsServerIdentity.Data;
+using StsServerIdentity.Filters;
+using StsServerIdentity.Models;
 using StsServerIdentity.Resources;
 using StsServerIdentity.Services;
-using Microsoft.IdentityModel.Tokens;
-using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
-using StsServerIdentity.Filters;
 
 namespace StsServerIdentity
 {
@@ -37,7 +33,7 @@ namespace StsServerIdentity
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-				
+
             _environment = env;
 
             builder.AddEnvironmentVariables();
@@ -49,38 +45,9 @@ namespace StsServerIdentity
         public void ConfigureServices(IServiceCollection services)
         {
             var stsConfig = Configuration.GetSection("StsConfig");
-            var useLocalCertStore = Convert.ToBoolean(Configuration["UseLocalCertStore"]);
-            var certificateThumbprint = Configuration["CertificateThumbprint"];
-
-            X509Certificate2 cert;
-
-            if (_environment.IsProduction() )
-            {
-                if (useLocalCertStore)
-                {
-                    using (X509Store store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
-                    {
-                        store.Open(OpenFlags.ReadOnly);
-                        var certs = store.Certificates.Find(X509FindType.FindByThumbprint, certificateThumbprint, false);
-                        cert = certs[0];
-                        store.Close();
-                    }
-                }
-                else
-                {
-                    // Azure deployment, will be used if deployed to Azure
-                    var vaultConfigSection = Configuration.GetSection("Vault");
-                    var keyVaultService = new KeyVaultCertificateService(vaultConfigSection["Url"], vaultConfigSection["ClientId"], vaultConfigSection["ClientSecret"]);
-                    cert = keyVaultService.GetCertificateFromKeyVault(vaultConfigSection["CertificateName"]);
-                }
-            }
-            else
-            {
-                cert = new X509Certificate2(Path.Combine(_environment.ContentRootPath, "damienbodserver.pfx"), "");
-            }
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
             services.Configure<StsConfig>(Configuration.GetSection("StsConfig"));
             services.Configure<EmailSettings>(Configuration.GetSection("EmailSettings"));
@@ -109,8 +76,8 @@ namespace StsServerIdentity
                         {
                             new CultureInfo("en-US"),
                             new CultureInfo("de-CH"),
-							new CultureInfo("fr-CH"),
-							new CultureInfo("it-CH")
+                            new CultureInfo("fr-CH"),
+                            new CultureInfo("it-CH")
                         };
 
                     options.DefaultRequestCulture = new RequestCulture(culture: "de-CH", uiCulture: "de-CH");
@@ -144,7 +111,6 @@ namespace StsServerIdentity
             services.AddTransient<IEmailSender, EmailSender>();
 
             services.AddIdentityServer()
-                .AddSigningCredential(cert)
                 .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryApiResources(Config.GetApiResources())
                 .AddInMemoryClients(Config.GetClients(stsConfig))
@@ -218,6 +184,14 @@ namespace StsServerIdentity
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<ApplicationDbContext>())
+                {
+                    context.Database.Migrate();
+                }
+            }
         }
     }
 }
