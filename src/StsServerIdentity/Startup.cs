@@ -55,15 +55,6 @@ namespace StsServerIdentity
             services.AddSingleton<LocService>();
             services.AddLocalization(options => options.ResourcesPath = "Resources");
 
-            services.AddAuthentication()
-                 .AddOpenIdConnect("aad", "Login with Azure AD", options =>
-                 {
-                     options.Authority = $"https://login.microsoftonline.com/common";
-                     options.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = false };
-                     options.ClientId = "99eb0b9d-ca40-476e-b5ac-6f4c32bfb530";
-                     options.CallbackPath = "/signin-oidc";
-                 });
-
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddErrorDescriber<StsIdentityErrorDescriber>()
@@ -131,51 +122,53 @@ namespace StsServerIdentity
             }
 
             app.UseHsts(hsts => hsts.MaxAge(365).IncludeSubdomains());
-            app.UseXContentTypeOptions();
-            app.UseReferrerPolicy(opts => opts.NoReferrer());
-            app.UseXXssProtection(options => options.EnabledWithBlockMode());
+            //app.UseXContentTypeOptions();
+            //app.UseReferrerPolicy(opts => opts.NoReferrer());
+            //app.UseXXssProtection(options => options.EnabledWithBlockMode());
 
-            var stsConfig = Configuration.GetSection("StsConfig");
-            var angularClientIdTokenOnlyUrl = stsConfig["AngularClientIdTokenOnlyUrl"];
-            var angularClientUrl = stsConfig["AngularClientUrl"];
+            //var stsConfig = Configuration.GetSection("StsConfig");
+            //var angularClientIdTokenOnlyUrl = stsConfig["AngularClientIdTokenOnlyUrl"];
+            //var angularClientUrl = stsConfig["AngularClientUrl"];
 
-            app.UseCsp(opts => opts
-                .BlockAllMixedContent()
-                .StyleSources(s => s.Self())
-                .StyleSources(s => s.UnsafeInline())
-                .FontSources(s => s.Self())
-                .FrameAncestors(s => s.Self())
-                .FrameAncestors(s => s.CustomSources(
-                    angularClientUrl, angularClientIdTokenOnlyUrl, "https://localhost:44352", "https://localhost:4200")
-                 )
-                .ImageSources(imageSrc => imageSrc.Self())
-                .ImageSources(imageSrc => imageSrc.CustomSources("data:"))
-                .ScriptSources(s => s.Self())
-                .ScriptSources(s => s.UnsafeInline())
-            );
+            //app.UseCsp(opts => opts
+            //    .BlockAllMixedContent()
+            //    .StyleSources(s => s.Self())
+            //    .StyleSources(s => s.UnsafeInline())
+            //    .FontSources(s => s.Self())
+            //    .FrameAncestors(s => s.Self())
+            //    .FrameAncestors(s => s.CustomSources(
+            //        angularClientUrl, angularClientIdTokenOnlyUrl, "https://localhost:44352", "https://localhost:4200")
+            //     )
+            //    .ImageSources(imageSrc => imageSrc.Self())
+            //    .ImageSources(imageSrc => imageSrc.CustomSources("data:"))
+            //    .ScriptSources(s => s.Self())
+            //    .ScriptSources(s => s.UnsafeInline())
+            //);
 
-            var locOptions = app.ApplicationServices.GetService<IOptions<RequestLocalizationOptions>>();
-            app.UseRequestLocalization(locOptions.Value);
+            //var locOptions = app.ApplicationServices.GetService<IOptions<RequestLocalizationOptions>>();
+            //app.UseRequestLocalization(locOptions.Value);
 
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                OnPrepareResponse = context =>
-                {
-                    if (context.Context.Response.Headers["feature-policy"].Count == 0)
-                    {
-                        var featurePolicy = "accelerometer 'none'; camera 'none'; geolocation 'none'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'";
+            app.UseStaticFiles(
+            //    new StaticFileOptions()
+            //{
+            //    OnPrepareResponse = context =>
+            //    {
+            //        if (context.Context.Response.Headers["feature-policy"].Count == 0)
+            //        {
+            //            var featurePolicy = "accelerometer 'none'; camera 'none'; geolocation 'none'; gyroscope 'none'; magnetometer 'none'; microphone 'none'; payment 'none'; usb 'none'";
 
-                        context.Context.Response.Headers["feature-policy"] = featurePolicy;
-                    }
+            //            context.Context.Response.Headers["feature-policy"] = featurePolicy;
+            //        }
 
-                    if (context.Context.Response.Headers["X-Content-Security-Policy"].Count == 0)
-                    {
-                        var csp = "script-src 'self';style-src 'self';img-src 'self' data:;font-src 'self';form-action 'self';frame-ancestors 'self';block-all-mixed-content";
-                        // IE
-                        context.Context.Response.Headers["X-Content-Security-Policy"] = csp;
-                    }
-                }
-            });
+            //        if (context.Context.Response.Headers["X-Content-Security-Policy"].Count == 0)
+            //        {
+            //            var csp = "script-src 'self';style-src 'self';img-src 'self' data:;font-src 'self';form-action 'self';frame-ancestors 'self';block-all-mixed-content";
+            //            // IE
+            //            context.Context.Response.Headers["X-Content-Security-Policy"] = csp;
+            //        }
+            //    }
+            //}
+                );
             app.UseIdentityServer();
 
             app.UseMvc(routes =>
