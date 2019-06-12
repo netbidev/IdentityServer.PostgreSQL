@@ -1,25 +1,25 @@
-﻿using System;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using IdentityModel;
+using IdentityServer4;
+using IdentityServer4.Extensions;
+using IdentityServer4.Models;
+using IdentityServer4.Services;
+using IdentityServer4.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using StsServerIdentity.Models.AccountViewModels;
-using StsServerIdentity.Models;
-using IdentityServer4.Services;
-using IdentityServer4.Stores;
-using IdentityServer4.Models;
-using IdentityModel;
-using IdentityServer4;
-using IdentityServer4.Extensions;
-using System.Globalization;
-using StsServerIdentity.Services;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using StsServerIdentity.Models;
+using StsServerIdentity.Models.AccountViewModels;
 using StsServerIdentity.Resources;
+using StsServerIdentity.Services;
+using System;
+using System.Globalization;
+using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace StsServerIdentity.Controllers
 {
@@ -275,7 +275,8 @@ namespace StsServerIdentity.Controllers
             {
                 var user = new ApplicationUser {
                     UserName = model.Email,
-                    Email = model.Email
+                    Email = model.Email,
+                    //IsAdmin = false
                 };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)

@@ -3,7 +3,7 @@
     "StsServerIdentity": {
       "commandName": "Project",
       "launchBrowser": true,
-      "applicationUrl": "https://localhost:44318;http://localhost:44319",
+      "applicationUrl": "http://localhost:44319",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

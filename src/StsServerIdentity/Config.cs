@@ -15,7 +15,7 @@ namespace StsServerIdentity
             {
                 new IdentityResources.OpenId(),
                 new IdentityResources.Profile(),
-                new IdentityResources.Email(), 
+                new IdentityResources.Email(),
                 new IdentityResource("dataeventrecordsscope",new []{ "role", "admin", "user", "dataEventRecords", "dataEventRecords.admin" , "dataEventRecords.user" } ),
                 new IdentityResource("securedfilesscope",new []{ "role", "admin", "user", "securedFiles", "securedFiles.admin", "securedFiles.user"} )
             };
@@ -61,10 +61,8 @@ namespace StsServerIdentity
         }
 
         // clients want to access resources (aka scopes)
-        public static IEnumerable<Client> GetClients(IConfigurationSection stsConfig)
+        public static IEnumerable<Client> GetClients()
         {
-            var angularClientIdTokenOnlyUrl = stsConfig["AngularClientIdTokenOnlyUrl"];
-            var angularClientUrl = stsConfig["AngularClientUrl"];
             // TODO use configs in app
 
             // client credentials client
@@ -82,18 +80,17 @@ namespace StsServerIdentity
                     AllowAccessTokensViaBrowser = true,
                     RedirectUris = new List<string>
                     {
-                        "https://localhost:44311",
-                        "https://localhost:44311/silent-renew.html"
+                        "http://localhost:44311",
+                        "http://localhost:44311/silent-renew.html"
 
                     },
                     PostLogoutRedirectUris = new List<string>
                     {
-                        "https://localhost:44311/unauthorized",
-                        "https://localhost:44311"
+                        "http://localhost:44311/unauthorized",
+                        "http://localhost:44311"
                     },
                     AllowedCorsOrigins = new List<string>
                     {
-                        "https://localhost:44311",
                         "http://localhost:44311"
                     },
                     AllowedScopes = new List<string>
